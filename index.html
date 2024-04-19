@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Identification</title>
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+    <div id="container">
+        <h1>Plant Identification</h1>
+        <p>Select an image of a plant or flower to identify:</p>
+        <input type="file" id="file-input" accept="image/*" style="display: none;">
+        <button id="choose-file-btn">Choose File</button>
+        <div id="image-preview" style="display: none;">
+            <img id="preview-img" src="#" alt="Uploaded Image">
+        </div>
+        <button id="upload-btn" style="display: none;">Upload Image</button>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const chooseFileButton = document.getElementById('choose-file-btn');
+        const uploadButton = document.getElementById('upload-btn');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImage = document.getElementById('preview-img');
+
+        chooseFileButton.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function() {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    previewImage.src = reader.result;
+                    imagePreview.style.display = 'block';
+                    uploadButton.style.display = 'block'; // Show the upload button
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        uploadButton.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            uploadImage(file);
+        });
+
+        function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://localhost:5000/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to upload image');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data); // Placeholder for handling response from backend
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
