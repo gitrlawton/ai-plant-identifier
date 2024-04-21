@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plant Identification</title>
     <link rel="stylesheet" href="static/styles.css">
 </head>
+
 <body>
     <div id="container">
         <h1>Plant Identification</h1>
@@ -18,39 +21,57 @@
         <button id="upload-btn" style="display: none;">Upload Image</button>
     </div>
 
+    <!-- Pop-up container -->
+    <div id="popup-container" style="display: none;">
+        <div id="popup-content">
+            <span id="close-popup-btn">X</span>
+            <h2>Image Analysis</h2>
+            <p id="description"></p>
+            <button id="close-btn">Close</button>
+        </div>
+    </div>
+
     <script>
+        // JavaScript code
+    
         const fileInput = document.getElementById('file-input');
         const chooseFileButton = document.getElementById('choose-file-btn');
         const uploadButton = document.getElementById('upload-btn');
         const imagePreview = document.getElementById('image-preview');
         const previewImage = document.getElementById('preview-img');
-
-        chooseFileButton.addEventListener('click', function() {
+        const popupContainer = document.getElementById('popup-container');
+        const descriptionElement = document.getElementById('description');
+    
+        // Event listener for file input button
+        chooseFileButton.addEventListener('click', function () {
             fileInput.click();
         });
-
-        fileInput.addEventListener('change', function() {
+    
+        // Event listener for file selection
+        fileInput.addEventListener('change', function () {
             const file = fileInput.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function() {
+                reader.onload = function () {
                     previewImage.src = reader.result;
                     imagePreview.style.display = 'block';
-                    uploadButton.style.display = 'block'; // Show the upload button
-                }
+                    uploadButton.style.display = 'block';
+                };
                 reader.readAsDataURL(file);
             }
         });
-
-        uploadButton.addEventListener('click', function() {
+    
+        // Event listener for upload button
+        uploadButton.addEventListener('click', function () {
             const file = fileInput.files[0];
             uploadImage(file);
         });
-
+    
+        // Function to upload the image and handle the response
         function uploadImage(file) {
             const formData = new FormData();
             formData.append('file', file);
-
+    
             fetch('http://localhost:5000/upload', {
                 method: 'POST',
                 body: formData
@@ -62,12 +83,28 @@
                 return response.json();
             })
             .then(data => {
-                console.log(data); // Placeholder for handling response from backend
+                // Update the description element with the analysis results from the response
+                descriptionElement.innerHTML = `
+                    <strong>Description:</strong> ${data.description || 'No description available'}<br>
+                    <strong>Categories:</strong> ${data.categories?.map(category => category).join(', ') || 'No categories available'}<br>
+                    <strong>Tags:</strong> ${data.tags?.map(tag => tag).join(', ') || 'No tags available'}<br>
+                    <strong>Objects:</strong> ${data.objects?.map(obj => obj).join(', ') || 'No objects available'}<br>
+                    <strong>Colors:</strong> ${data.color?.join(', ') || 'No dominant colors available'}
+                `;
+    
+                // Show the pop-up container
+                popupContainer.style.display = 'block';
             })
             .catch(error => {
                 console.error('Error:', error);
             });
         }
+    
+        // Event listener for the close button in the pop-up container
+        const closePopupButton = document.getElementById('close-popup-btn');
+        closePopupButton.addEventListener('click', function () {
+            popupContainer.style.display = 'none';
+        });
     </script>
 </body>
 </html>
