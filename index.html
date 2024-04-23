@@ -20,6 +20,9 @@
         </div>
         <button id="upload-btn" style="display: none;">Upload Image</button>
         
+        <!-- Status container for displaying status messages -->
+        <div id="status" style="display: none;"></div>
+        
         <!-- Container for displaying plant information -->
         <div id="info-container" style="display: none;">
             <h2>Plant Information:</h2>
@@ -29,7 +32,7 @@
 
     <script>
         // JavaScript code
-    
+        
         const fileInput = document.getElementById('file-input');
         const chooseFileButton = document.getElementById('choose-file-btn');
         const uploadButton = document.getElementById('upload-btn');
@@ -37,6 +40,7 @@
         const previewImage = document.getElementById('preview-img');
         const descriptionElement = document.getElementById('description');
         const infoContainer = document.getElementById('info-container');
+        const statusElement = document.getElementById('status');
 
         // Event listener for file input button
         chooseFileButton.addEventListener('click', function () {
@@ -61,12 +65,19 @@
         uploadButton.addEventListener('click', function () {
             const file = fileInput.files[0];
             uploadImage(file);
+            
+            // Hide plant information
+            infoContainer.style.display = 'none';
         });
 
         // Function to upload the image and handle the response
         function uploadImage(file) {
             const formData = new FormData();
             formData.append('file', file);
+
+            // Update status element
+            statusElement.innerText = "Uploading image...";
+            statusElement.style.display = 'block';
 
             fetch('http://localhost:5000/upload', {
                 method: 'POST',
@@ -76,6 +87,7 @@
                 if (!response.ok) {
                     throw new Error('Failed to upload image');
                 }
+                statusElement.innerText = "Analyzing image...";
                 return response.json();
             })
             .then(data => {
@@ -83,12 +95,15 @@
                 descriptionElement.innerHTML = `
                     <strong>Description:</strong> ${data.plant_info || 'No information available'}
                 `;
-    
-                // Show the info container
+                
+                // Hide status element and show plant information
+                statusElement.style.display = 'none';
+                uploadButton.style.display = 'none';
                 infoContainer.style.display = 'block';
             })
             .catch(error => {
                 console.error('Error:', error);
+                statusElement.innerText = "An error occurred during the upload. Please try again.";
             });
         }
     </script>

@@ -26,6 +26,7 @@ DEPLOYMENT_NAME = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME')
 AZURE_ENDPOINT = os.getenv('AZURE_ENDPOINT')
 AZURE_API_KEY = os.getenv('AZURE_API_KEY')
 
+
 @app.route('/upload', methods=['POST'])
 def upload_image():
     # Check if a file was uploaded
@@ -84,7 +85,7 @@ def upload_image():
     print('Sending a message to GPT4')
 
     response = client.chat.completions.create(
-        model=AZURE_OPENAI_DEPLOYMENT_NAME, 
+        model=DEPLOYMENT_NAME, 
         messages=messages,
         max_tokens=200
     )
