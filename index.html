@@ -19,15 +19,19 @@
             <img id="preview-img" src="#" alt="Uploaded Image">
         </div>
         <button id="upload-btn" style="display: none;">Upload Image</button>
-        
+
         <!-- Status container for displaying status messages -->
         <div id="status" style="display: none;"></div>
-        
+
         <!-- Container for displaying plant information -->
         <div id="info-container" style="display: none;">
             <h2>Plant Information:</h2>
             <div id="description"></div>
-            <button id="play-btn" style="display: none;">Play</button> <!-- Play button -->
+
+            <!-- Audio playback controls -->
+            <div id="audio-controls" style="display: none;">
+                <audio id="audio-player" controls autoplay></audio>
+            </div>
         </div>
     </div>
 
@@ -40,16 +44,16 @@
         const descriptionElement = document.getElementById('description');
         const infoContainer = document.getElementById('info-container');
         const statusElement = document.getElementById('status');
-        const playButton = document.getElementById('play-btn'); // Play button
-
+        const audioControls = document.getElementById('audio-controls'); // Audio controls container
+        const audioPlayer = document.getElementById('audio-player'); // Audio player
+    
         let plantInfo = ''; // Variable to store plant information
-        let audio = new Audio(); // Create an Audio instance for playing audio
-
+    
         // Event listener for file input button
         chooseFileButton.addEventListener('click', function () {
             fileInput.click();
         });
-
+    
         // Event listener for file selection
         fileInput.addEventListener('change', function () {
             const file = fileInput.files[0];
@@ -63,25 +67,26 @@
                 reader.readAsDataURL(file);
             }
         });
-
+    
         // Event listener for upload button
         uploadButton.addEventListener('click', function () {
             const file = fileInput.files[0];
             uploadImage(file);
             
-            // Hide plant information
+            // Hide plant information and audio controls
             infoContainer.style.display = 'none';
+            audioControls.style.display = 'none';
         });
-
+    
         // Function to upload the image and handle the response
         function uploadImage(file) {
             const formData = new FormData();
             formData.append('file', file);
-
+    
             // Update status element
             statusElement.innerText = "Uploading image...";
             statusElement.style.display = 'block';
-
+    
             fetch('http://localhost:5000/upload', {
                 method: 'POST',
                 body: formData
@@ -90,83 +95,63 @@
                 if (!response.ok) {
                     throw new Error('Failed to upload image');
                 }
-                statusElement.innerText = "Analyzing image...";
                 return response.json();
             })
             .then(data => {
-                // Update the description element with the plant information
-                descriptionElement.innerHTML = `
-                    <strong>Description:</strong> ${data.plant_info || 'No information available'}
-                `;
-                
                 // Save plant information to a variable
                 plantInfo = data.plant_info;
                 
-                // Hide status element and show plant information
-                statusElement.style.display = 'none';
-                uploadButton.style.display = 'none';
-                infoContainer.style.display = 'block';
-                
-                // Show the play button
-                playButton.style.display = 'block';
-                playButton.disabled = false; // Enable the play button
+                // Start audio synthesis
+                synthesizeAudio(plantInfo);
             })
             .catch(error => {
                 console.error('Error:', error);
                 statusElement.innerText = "An error occurred during the upload. Please try again.";
             });
         }
-
-        // Event listener for play button
-        playButton.addEventListener('click', function () {
-            playButton.disabled = true; // Disable the play button
-
-            synthesizeAudio(plantInfo);
-        });
-
-        // Function to synthesize audio from plant information and play it
+    
+        // Function to synthesize audio and set it to the audio player
         function synthesizeAudio(plantInfo) {
             fetch('http://localhost:5000/synthesize_audio', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    'plant_info': plantInfo
-                })
+                body: JSON.stringify({ 'plant_info': plantInfo })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.audio_data) {
-                    // Convert the hex audio data to a Blob and create an Audio URL
-                    const audioBlob = new Blob([new Uint8Array(data.audio_data.match(/.{1,2}/g).map(byte => parseInt(byte, 16)))], { type: 'audio/mpeg' });
+                    // Convert base64-encoded audio data to a Blob
+                    const audioBlob = new Blob([Uint8Array.from(atob(data.audio_data), c => c.charCodeAt(0))], { type: 'audio/mpeg' });
                     const audioUrl = URL.createObjectURL(audioBlob);
 
-                    // Set the audio source
-                    audio.src = audioUrl;
-
-                    // Remove any existing event listener for 'ended' event
-                    audio.removeEventListener('ended', handleAudioEnd);
                     
-                    // Add an event listener for the 'ended' event
-                    audio.addEventListener('ended', handleAudioEnd);
+                    // Update the description element with the plant information
+                    descriptionElement.innerHTML = `
+                        <strong>Description:</strong> ${plantInfo || 'No information available'}
+                    `;
+                    
+                    // Show the plant information container
+                    infoContainer.style.display = 'block';
+                    
+                    // Hide the status element as the process has completed
+                    statusElement.style.display = 'none';
+                    statusElement.innerText = '';
 
-                    // Play the audio
-                    audio.play();
+                    // Set the audio source
+                    audioPlayer.src = audioUrl;
+                    
+                    // Show the audio controls only after successfully setting the audio source
+                    audioControls.style.display = 'block';
                 } else {
                     console.error('No audio data received');
-                    playButton.disabled = false; // Re-enable the play button
                 }
             })
             .catch(error => {
                 console.error('Error fetching or playing audio:', error);
-                playButton.disabled = false; // Re-enable the play button in case of error
+                statusElement.innerText = "An error occurred during the process. Please try again.";
             });
-        }
-
-        // Function to handle the end of audio playback
-        function handleAudioEnd() {
-            playButton.disabled = false; // Enable the play button when audio ends
         }
     </script>
 </body>

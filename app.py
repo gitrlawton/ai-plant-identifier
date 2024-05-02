@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
+import base64
 from config import AZURE_ENDPOINT, AZURE_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
 from config import AZURE_OPENAI_API_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT_NAME
 from openai import AzureOpenAI
@@ -79,7 +80,15 @@ def upload_image():
     messages = [
         {
             "role": "user",
-            "content": f"Given these tags: {tags}, - (which are tags that refer to an image of a flower plant, vegetable plant, or fruit plant) - ignore the tags that are of a more general nature (flower, shrub, herb, plant, green, vegetable, etc.) and instead, look for a tag that is the common name of a plant, vegetable, fruit, herb, or flower (for example - broccoli, tomato, lily, dandelion, etc.)  If there are multiple common name tags, (for example - lily and orchid) use the one that appears first in the list.  Write me a short detailed summary of the plant you've identified based on the tag, using less than 1000 characters.  Begin the response using the format 'The <plant name> (<latin name>) is a <rest of the response>.  If none of the tags given are the common name for a plant, simply return 'Unable to identify plant based on the image.  Try using a picture of the plant flowering, fruiting, or at a different angle.'"
+            "content": f"""Given these image tags: {tags} (which are tags generated from an image of a flower plant, vegetable plant, or fruit plant) 
+            ignore the tags that are of a more general nature (for example: flower, shrub, herb, plant, green, vegetable, etc.) and instead, 
+            look for a tag that is the common name of a plant, vegetable, fruit, herb, or flower (for example: broccoli, tomato, lily, dandelion, etc.)  
+            If there are multiple common name tags, (for example - lily and orchid) use the one that appears first in the list.  
+            Write me a short detailed summary of the plant you've identified based on the tag, using less than 1000 characters.  
+            Begin the response using the format 'The <plant name> (<latin name>) is a <rest of the response>.  
+            Important: If the tags do not appear to be from an image of a plant, return 'There doesn't appear to be a plant in this image.  Upload an image of a plant or flower to identify.'  
+            If none of the tags given are the common name for a plant, simply return 'Unable to identify plant based on the image.  
+            Try using a picture of the plant flowering, fruiting, or at a different angle.'"""
         }
     ]
 
@@ -104,23 +113,38 @@ def upload_image():
 def synthesize_and_play_audio(plant_info):
     # Initialize speech configuration
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=REGION)
-    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config)
+    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config, audio_config=None)
 
     # Synthesize audio from plant information
     result = speech_synthesizer.speak_text_async(plant_info).get()
+    
+    # Check the result of the synthesis
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
         print("Successfully synthesized audio.")
-        audio_data = result.audio_data
-        # Play the audio (front-end should request audio data to play it)
+        # Return the audio data directly as bytes
+        return result.audio_data
+    
     else:
-        print("Text-to-speech failed.")
+        print("Text-to-speech synthesis failed.")
+        return None
 
 # Add the speech synthesis task as an asynchronous task after returning the plant information
 @app.route('/synthesize_audio', methods=['POST'])
 def synthesize_audio():
     plant_info = request.json.get('plant_info', '')
-    synthesize_and_play_audio(plant_info)
-    return jsonify({'status': 'Audio synthesis started.'})
+    # Call function to synthesize audio and get the audio data
+    audio_data = synthesize_and_play_audio(plant_info)
+    
+    if audio_data is not None:
+        # Convert audio data to a base64-encoded string
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        # Return the base64-encoded audio data in a JSON response
+        return jsonify({'audio_data': audio_base64})
+    
+    else:
+        # Return an error response if audio synthesis failed
+        return jsonify({'error': 'Failed to synthesize audio.'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
