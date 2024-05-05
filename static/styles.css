@@ -24,7 +24,7 @@ h1 {
 }
 
 #image-preview {
-    margin-top: 20px;
+    margin-top: 10px;
     display: none;
 }
 
@@ -36,4 +36,22 @@ h1 {
 
 #audio-controls {
     margin-top: 10px;
+}
+
+#upload-btn {
+    display: block;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: 0px;
+}
+
+#status {
+    margin-top: 13px;
+}
+
+#info-container {
+    clear: both; /* Ensures the container starts on its own line */
+    text-align: center; /* Center the text within the container */
+    display: none; /* Initially hidden */
+    margin-top: 20px;
 }
