@@ -3,8 +3,8 @@ from flask_cors import CORS
 import requests
 import os
 import base64
-from config import AZURE_ENDPOINT, AZURE_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
-from config import AZURE_OPENAI_API_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT_NAME
+from config import AZURE_COMPUTER_VISION_ENDPOINT, AZURE_COMPUTER_VISION_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
+from config import AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_KEY, AZURE_OPENAI_DEPLOYMENT_NAME
 from openai import AzureOpenAI
 import azure.cognitiveservices.speech as speechsdk
 
@@ -16,17 +16,17 @@ CORS(app)
 
 # Initialize the AzureOpenAI client with your API key, version, and endpoint
 client = AzureOpenAI(
-    api_key=os.getenv('AZURE_OPENAI_API_KEY'),
+    api_key=os.getenv('AZURE_OPENAI_KEY'),
     api_version='2024-02-01',
-    azure_endpoint=os.getenv('AZURE_OPENAI_API_ENDPOINT') 
+    azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT') 
 )
 
 # Define the deployment name for the GPT-4 model
 DEPLOYMENT_NAME = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME')
 
 # Azure Computer Vision API credentials
-AZURE_ENDPOINT = os.getenv('AZURE_ENDPOINT')
-AZURE_API_KEY = os.getenv('AZURE_API_KEY')
+COMPUTER_VISION_ENDPOINT = os.getenv('AZURE_COMPUTER_VISION_ENDPOINT')
+COMPUTER_VISION_KEY = os.getenv('AZURE_COMPUTER_VISION_KEY')
 
 # Azure Cognitive Services credentials
 SPEECH_KEY = os.getenv('AZURE_SPEECH_KEY')
@@ -48,18 +48,18 @@ def upload_image():
     # Testing: Image Received from Frontend.
     print("Image received by the backend")
     
-    # Check if AZURE_ENDPOINT and AZURE_API_KEY are set
-    if not AZURE_ENDPOINT or not AZURE_API_KEY:
+    # Check if COMPUTER_VISION_ENDPOINT and COMPUTER_VISION_KEY are set
+    if not COMPUTER_VISION_ENDPOINT or not COMPUTER_VISION_KEY:
         return jsonify({'error': 'Azure API credentials missing'}), 500
 
     # Prepare request headers for Azure Computer Vision API
     headers = {
         'Content-Type': 'application/octet-stream',
-        'Ocp-Apim-Subscription-Key': AZURE_API_KEY
+        'Ocp-Apim-Subscription-Key': COMPUTER_VISION_KEY
     }
     
     # Analyze the image with Azure Computer Vision API
-    api_url = f'{AZURE_ENDPOINT}/vision/v3.2/analyze'
+    api_url = f'{COMPUTER_VISION_ENDPOINT}/vision/v3.2/analyze'
     params = {
         'visualFeatures': 'Tags',
         'language': 'en'
