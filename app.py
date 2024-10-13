@@ -16,21 +16,10 @@ CORS(app)
 
 # Initialize the AzureOpenAI client with your API key, version, and endpoint
 client = AzureOpenAI(
-    api_key=os.getenv('AZURE_OPENAI_KEY'),
+    api_key=AZURE_OPENAI_KEY,
     api_version='2024-02-01',
-    azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT') 
+    azure_endpoint=AZURE_OPENAI_ENDPOINT
 )
-
-# Define the deployment name for the GPT-4 model
-DEPLOYMENT_NAME = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME')
-
-# Azure Computer Vision API credentials
-COMPUTER_VISION_ENDPOINT = os.getenv('AZURE_COMPUTER_VISION_ENDPOINT')
-COMPUTER_VISION_KEY = os.getenv('AZURE_COMPUTER_VISION_KEY')
-
-# Azure Cognitive Services credentials
-SPEECH_KEY = os.getenv('AZURE_SPEECH_KEY')
-REGION = os.getenv('AZURE_SPEECH_REGION')
 
 
 @app.route('/upload', methods=['POST'])
@@ -49,17 +38,17 @@ def upload_image():
     print("Image received by the backend")
     
     # Check if COMPUTER_VISION_ENDPOINT and COMPUTER_VISION_KEY are set
-    if not COMPUTER_VISION_ENDPOINT or not COMPUTER_VISION_KEY:
+    if not AZURE_COMPUTER_VISION_ENDPOINT or not AZURE_COMPUTER_VISION_KEY:
         return jsonify({'error': 'Azure API credentials missing'}), 500
 
     # Prepare request headers for Azure Computer Vision API
     headers = {
         'Content-Type': 'application/octet-stream',
-        'Ocp-Apim-Subscription-Key': COMPUTER_VISION_KEY
+        'Ocp-Apim-Subscription-Key': AZURE_COMPUTER_VISION_KEY
     }
     
     # Analyze the image with Azure Computer Vision API
-    api_url = f'{COMPUTER_VISION_ENDPOINT}/vision/v3.2/analyze'
+    api_url = f'{AZURE_COMPUTER_VISION_KEY}/vision/v3.2/analyze'
     params = {
         'visualFeatures': 'Tags',
         'language': 'en'
@@ -96,7 +85,7 @@ def upload_image():
     print('Sending a message to GPT4')
 
     response = client.chat.completions.create(
-        model=DEPLOYMENT_NAME, 
+        model=AZURE_OPENAI_DEPLOYMENT_NAME, 
         messages=messages,
         max_tokens=200
     )
@@ -112,7 +101,7 @@ def upload_image():
 
 def synthesize_and_play_audio(plant_info):
     # Initialize speech configuration
-    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=REGION)
+    speech_config = speechsdk.SpeechConfig(subscription=AZURE_SPEECH_KEY, region=AZURE_SPEECH_REGION)
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config, audio_config=None)
 
     # Synthesize audio from plant information
