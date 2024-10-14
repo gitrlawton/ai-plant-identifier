@@ -48,7 +48,7 @@ def upload_image():
     }
     
     # Analyze the image with Azure Computer Vision API
-    api_url = f'{AZURE_COMPUTER_VISION_KEY}/vision/v3.2/analyze'
+    api_url = f'{AZURE_COMPUTER_VISION_ENDPOINT}/vision/v3.2/analyze'
     params = {
         'visualFeatures': 'Tags',
         'language': 'en'

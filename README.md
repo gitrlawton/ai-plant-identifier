@@ -22,7 +22,34 @@ To set up the project, ensure you have Python installed on your machine. Then, f
    cd <repository-directory>
    ```
 
-2. Create a `config.py` file in the root directory and add your Azure API keys:
+2. Create a virtual environment:
+
+   ```bash
+   python -m venv .venv
+   ```
+
+3. Activate the virtual environment:
+
+   - On Windows (using Command Prompt):
+     ```bash
+     .venv\Scripts\activate
+     ```
+   - On Windows (using Git Bash):
+     ```bash
+     source .venv/Scripts/activate
+     ```
+   - On macOS/Linux:
+     ```bash
+     source .venv/bin/activate
+     ```
+
+4. Install the required Python packages:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. Create a `config.py` file in the root directory and add your Azure API keys:
 
    ```python
    AZURE_COMPUTER_VISION_ENDPOINT = 'your_computer_vision_endpoint'
@@ -42,7 +69,7 @@ To set up the project, ensure you have Python installed on your machine. Then, f
    python app.py
    ```
 
-2. Open your web browser and navigate to `http://localhost:5000`.
+2. Locate the `index.html` file in the project directory and open it in your preferred web browser.
 
 3. Upload an image of a plant or flower to identify.
 
